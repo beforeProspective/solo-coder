@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>减压小鱼缸</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            transition: background 2s ease;
+        }
+
+        .day-mode {
+            background: linear-gradient(180deg, #87CEEB 0%, #98D8E8 30%, #B5E6F0 60%, #D4F1F5 100%);
+        }
+
+        .night-mode {
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 30%, #0f3460 60%, #1a1a2e 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.5s ease;
+            z-index: 100;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-btn.day {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+        }
+
+        .toggle-btn.night {
+            background: linear-gradient(135deg, #4a4a8a, #2a2a5a);
+        }
+
+        .water-surface {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .bubbles {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .bubble {
+            position: absolute;
+            bottom: -10px;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
+        }
+
+        @keyframes rise {
+            0% {
+                bottom: -10px;
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                bottom: 100vh;
+                opacity: 0;
+            }
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .hint.hidden {
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container day-mode" id="container">
+        <canvas id="canvas"></canvas>
+        <button class="toggle-btn day" id="toggleBtn">☀️</button>
+        <div class="bubbles" id="bubbles"></div>
+        <div class="hint" id="hint">点击水面撒下食物</div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('container');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const bubblesContainer = document.getElementById('bubbles');
+        const hint = document.getElementById('hint');
+
+        // 设置canvas尺寸
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // 模式状态
+        let isDay = true;
+
+        // 鱼群颜色配置
+        const fishColors = {
+            day: [
+                { body: '#FF6B6B', tail: '#FF8E8E' },
+                { body: '#4ECDC4', tail: '#7EDFDB' },
+                { body: '#FFE66D', tail: '#FFF09E' },
+                { body: '#FF9FF3', tail: '#FFBFF7' },
+                { body: '#54A0FF', tail: '#7DB3FF' }
+            ],
+            night: [
+                { body: '#FF6B6B', tail: '#FF8E8E' },
+                { body: '#4ECDC4', tail: '#7EDFDB' },
+                { body: '#FFE66D', tail: '#FFF09E' },
+                { body: '#FF9FF3', tail: '#FFBFF7' },
+                { body: '#54A0FF', tail: '#7DB3FF' }
+            ]
+        };
+
+        // 小鱼类
+        class Fish {
+            constructor(index) {
+                this.index = index;
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = 20 + Math.random() * 15;
+                this.speed = 0.5 + Math.random() * 0.5;
+                this.angle = Math.random() * Math.PI * 2;
+                this.targetAngle = this.angle;
+                this.angleSpeed = 0;
+                this.tailWagAngle = 0;
+                this.tailWagSpeed = 0.15;
+                this.normalWagSpeed = 0.15;
+                this.fastWagSpeed = 0.3;
+                this.isExcited = false;
+                this.excitementTimer = 0;
+                this.targetFood = null;
+                this.colorIndex = this.index % fishColors.day.length;
+            }
+
+            update(foods) {
+                if (this.isExcited) {
+                    this.excitementTimer--;
+                    if (this.excitementTimer <= 0) {
+                        this.isExcited = false;
+                    }
+                }
+
+                this.tailWagSpeed = this.isExcited ? this.fastWagSpeed : this.normalWagSpeed;
+                this.tailWagAngle += this.tailWagSpeed;
+
+                let nearestFood = null;
+                let nearestDistance = Infinity;
+
+                for (let food of foods) {
+                    const dx = food.x - this.x;
+                    const dy = food.y - this.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < nearestDistance && distance < 200) {
+                        nearestDistance = distance;
+                        nearestFood = food;
+                    }
+                }
+
+                this.targetFood = nearestFood;
+
+                if (nearestFood) {
+                    const targetAngle = Math.atan2(nearestFood.y - this.y, nearestFood.x - this.x);
+                    let angleDiff = targetAngle - this.angle;
+
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+                    this.angleSpeed += angleDiff * 0.03;
+                    this.angleSpeed *= 0.95;
+                } else {
+                    if (Math.random() < 0.02) {
+                        this.targetAngle = this.angle + (Math.random() - 0.5) * Math.PI * 0.5;
+                    }
+
+                    let angleDiff = this.targetAngle - this.angle;
+                    while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                    while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+                    this.angleSpeed += angleDiff * 0.01;
+                    this.angleSpeed *= 0.98;
+                }
+
+                this.angle += this.angleSpeed;
+
+                const currentSpeed = nearestFood ? this.speed * 1.5 : this.speed;
+                this.x += Math.cos(this.angle) * currentSpeed;
+                this.y += Math.sin(this.angle) * currentSpeed;
+
+                const margin = this.size;
+                if (this.x < margin) {
+                    this.x = margin;
+                    this.angle = Math.PI - this.angle;
+                    this.targetAngle = this.angle;
+                } else if (this.x > canvas.width - margin) {
+                    this.x = canvas.width - margin;
+                    this.angle = Math.PI - this.angle;
+                    this.targetAngle = this.angle;
+                }
+
+                if (this.y < margin) {
+                    this.y = margin;
+                    this.angle = -this.angle;
+                    this.targetAngle = this.angle;
+                } else if (this.y > canvas.height - margin) {
+                    this.y = canvas.height - margin;
+                    this.angle = -this.angle;
+                    this.targetAngle = this.angle;
+                }
+            }
+
+            eat() {
+                this.isExcited = true;
+                this.excitementTimer = 60;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+
+                const colors = isDay ? fishColors.day : fishColors.night;
+                const color = colors[this.colorIndex];
+
+                const tailOffset = Math.sin(this.tailWagAngle) * 0.2;
+
+                ctx.beginPath();
+                ctx.fillStyle = color.tail;
+                ctx.moveTo(-this.size, 0);
+                ctx.quadraticCurveTo(-this.size * 1.3, -this.size * 0.5 + tailOffset * 20, -this.size * 1.5, -this.size * 0.4 + tailOffset * 15);
+                ctx.quadraticCurveTo(-this.size * 1.3, 0, -this.size * 1.5, this.size * 0.4 - tailOffset * 15);
+                ctx.quadraticCurveTo(-this.size * 1.3, this.size * 0.5 - tailOffset * 20, -this.size, 0);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = color.body;
+                ctx.ellipse(0, 0, this.size, this.size * 0.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = color.body;
+                ctx.moveTo(this.size * 0.2, -this.size * 0.45);
+                ctx.quadraticCurveTo(this.size * 0.1, -this.size * 0.8, this.size * 0.3, -this.size * 0.7);
+                ctx.quadraticCurveTo(this.size * 0.4, -this.size * 0.6, this.size * 0.35, -this.size * 0.45);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = '#333';
+                ctx.arc(this.size * 0.6, -this.size * 0.12, this.size * 0.08, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = '#fff';
+                ctx.arc(this.size * 0.62, -this.size * 0.14, this.size * 0.03, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+        }
+
+        // 食物类
+        class Food {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = 4 + Math.random() * 3;
+                this.speed = 0.3 + Math.random() * 0.2;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = 0.05 + Math.random() * 0.03;
+                this.alpha = 1;
+            }
+
+            update() {
+                this.y += this.speed;
+                this.wobble += this.wobbleSpeed;
+                this.x += Math.sin(this.wobble) * 0.2;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+
+                ctx.beginPath();
+                ctx.fillStyle = '#FFD700';
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.arc(this.x - this.size * 0.2, this.y - this.size * 0.2, this.size * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            isOffScreen() {
+                return this.y > canvas.height + 20;
+            }
+        }
+
+        // 初始化鱼群
+        const fishes = [];
+        const fishCount = 4;
+
+        for (let i = 0; i < fishCount; i++) {
+            fishes.push(new Fish(i));
+        }
+
+        // 食物数组
+        let foods = [];
+
+        // 创建气泡背景
+        function createBubbles() {
+            bubblesContainer.innerHTML = '';
+            for (let i = 0; i < 15; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.left = Math.random() * 100 + '%';
+                bubble.style.width = (4 + Math.random() * 8) + 'px';
+                bubble.style.height = bubble.style.width;
+                bubble.style.animationDuration = (8 + Math.random() * 6) + 's';
+                bubble.style.animationDelay = Math.random() * 10 + 's';
+                bubblesContainer.appendChild(bubble);
+            }
+        }
+
+        createBubbles();
+
+        // 昼夜切换
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isDay = !isDay;
+
+            if (isDay) {
+                container.classList.remove('night-mode');
+                container.classList.add('day-mode');
+                toggleBtn.classList.remove('night');
+                toggleBtn.classList.add('day');
+                toggleBtn.textContent = '☀️';
+            } else {
+                container.classList.remove('day-mode');
+                container.classList.add('night-mode');
+                toggleBtn.classList.remove('day');
+                toggleBtn.classList.add('night');
+                toggleBtn.textContent = '🌙';
+            }
+        });
+
+        // 点击生成食物
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const foodCount = 5 + Math.floor(Math.random() * 5);
+            for (let i = 0; i < foodCount; i++) {
+                const offsetX = (Math.random() - 0.5) * 60;
+                const offsetY = (Math.random() - 0.5) * 30;
+                foods.push(new Food(x + offsetX, y + offsetY));
+            }
+
+            hint.classList.add('hidden');
+        });
+
+        // 碰撞检测
+        function checkCollisions() {
+            for (let fish of fishes) {
+                for (let i = foods.length - 1; i >= 0; i--) {
+                    const food = foods[i];
+                    const dx = food.x - fish.x;
+                    const dy = food.y - fish.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < fish.size + food.size) {
+                        fish.eat();
+                        foods.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        // 动画循环
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let fish of fishes) {
+                fish.update(foods);
+            }
+
+            for (let i = foods.length - 1; i >= 0; i--) {
+                foods[i].update();
+                if (foods[i].isOffScreen()) {
+                    foods.splice(i, 1);
+                }
+            }
+
+            checkCollisions();
+
+            for (let food of foods) {
+                food.draw();
+            }
+
+            for (let fish of fishes) {
+                fish.draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
