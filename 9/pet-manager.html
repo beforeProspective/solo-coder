@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宠物管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 25px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: block;
+            margin: 20px auto 0;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .record-list {
+            margin-top: 30px;
+        }
+
+        .record-list h3 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .record-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .record-info {
+            flex: 1;
+        }
+
+        .record-info p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .record-info strong {
+            color: #333;
+        }
+
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .delete-btn:hover {
+            background: #ee5a5a;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .qty-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .qty-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .qty-display {
+            min-width: 60px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .record-item {
+                flex-direction: column;
+            }
+
+            .delete-btn {
+                margin-top: 10px;
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐾 宠物管理系统</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('health')">健康档案</button>
+            <button class="tab-btn" onclick="switchTab('feeding')">喂养管理</button>
+            <button class="tab-btn" onclick="switchTab('growth')">成长记录</button>
+            <button class="tab-btn" onclick="switchTab('supplies')">用品管理</button>
+            <button class="tab-btn" onclick="switchTab('activity')">活动日志</button>
+        </div>
+
+        <!-- 健康档案 -->
+        <div id="health" class="tab-content active">
+            <div class="section">
+                <h2>🏥 健康档案</h2>
+                <form id="healthForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>记录类型</label>
+                            <select id="healthType" required>
+                                <option value="vaccine">疫苗注射</option>
+                                <option value="checkup">体检</option>
+                                <option value="medical">医疗历史</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="healthDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>标题/疫苗名称</label>
+                            <input type="text" id="healthTitle" placeholder="例如：狂犬疫苗、年度体检" required>
+                        </div>
+                        <div class="form-group">
+                            <label>医院/诊所</label>
+                            <input type="text" id="healthClinic" placeholder="就诊机构">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>详细描述</label>
+                        <textarea id="healthDescription" placeholder="记录详细信息..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">添加记录</button>
+                </form>
+
+                <div class="record-list">
+                    <h3>📋 健康记录列表</h3>
+                    <div id="healthRecords"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 喂养管理 -->
+        <div id="feeding" class="tab-content">
+            <div class="section">
+                <h2>🍖 喂养管理</h2>
+                <form id="feedingForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>记录类型</label>
+                            <select id="feedingType" required>
+                                <option value="plan">喂食计划</option>
+                                <option value="record">营养摄入记录</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="feedingDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>时间</label>
+                            <input type="time" id="feedingTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>食物名称</label>
+                            <input type="text" id="foodName" placeholder="例如：狗粮、罐头" required>
+                        </div>
+                        <div class="form-group">
+                            <label>份量 (g/份)</label>
+                            <input type="number" id="foodAmount" placeholder="食用份量" required min="0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>热量 (kcal)</label>
+                            <input type="number" id="foodCalories" placeholder="热量摄入" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="feedingNotes" placeholder="喂养备注..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">添加记录</button>
+                </form>
+
+                <div class="record-list">
+                    <h3>📋 喂养记录列表</h3>
+                    <div id="feedingRecords"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 成长记录 -->
+        <div id="growth" class="tab-content">
+            <div class="section">
+                <h2>📏 成长记录</h2>
+                <form id="growthForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>记录日期</label>
+                            <input type="date" id="growthDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>体重 (kg)</label>
+                            <input type="number" id="weight" placeholder="例如：5.5" required min="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>身高/身长 (cm)</label>
+                            <input type="number" id="height" placeholder="例如：30" required min="0" step="0.1">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="growthNotes" placeholder="成长备注..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">添加记录</button>
+                </form>
+
+                <div class="record-list">
+                    <h3>📋 成长记录列表</h3>
+                    <div id="growthRecords"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用品管理 -->
+        <div id="supplies" class="tab-content">
+            <div class="section">
+                <h2>🛍️ 用品管理</h2>
+                <form id="suppliesForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>用品名称</label>
+                            <input type="text" id="supplyName" placeholder="例如：狗粮、猫砂、玩具" required>
+                        </div>
+                        <div class="form-group">
+                            <label>类别</label>
+                            <select id="supplyCategory" required>
+                                <option value="food">食品</option>
+                                <option value="daily">日用品</option>
+                                <option value="toy">玩具</option>
+                                <option value="medicine">药品</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>库存数量</label>
+                            <input type="number" id="supplyQuantity" placeholder="库存数量" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>单位</label>
+                            <input type="text" id="supplyUnit" placeholder="例如：袋、个、瓶" required>
+                        </div>
+                        <div class="form-group">
+                            <label>最低库存提醒</label>
+                            <input type="number" id="supplyMinStock" placeholder="低于此数量提醒" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="supplyNotes" placeholder="用品备注..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">添加用品</button>
+                </form>
+
+                <div class="record-list">
+                    <h3>📦 库存列表</h3>
+                    <div id="suppliesRecords"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 活动日志 -->
+        <div id="activity" class="tab-content">
+            <div class="section">
+                <h2>🏃 活动日志</h2>
+                <form id="activityForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>活动类型</label>
+                            <select id="activityType" required>
+                                <option value="walk">遛狗散步</option>
+                                <option value="play">玩耍</option>
+                                <option value="training">训练</option>
+                                <option value="swimming">游泳</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="activityDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>时间</label>
+                            <input type="time" id="activityTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>时长 (分钟)</label>
+                            <input type="number" id="activityDuration" placeholder="活动时长" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>地点</label>
+                            <input type="text" id="activityLocation" placeholder="活动地点">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>活动描述</label>
+                        <textarea id="activityDescription" placeholder="活动详细描述..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">添加记录</button>
+                </form>
+
+                <div class="record-list">
+                    <h3>📋 活动记录列表</h3>
+                    <div id="activityRecords"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据存储键名
+        const STORAGE_KEYS = {
+            health: 'petManager_healthRecords',
+            feeding: 'petManager_feedingRecords',
+            growth: 'petManager_growthRecords',
+            supplies: 'petManager_suppliesRecords',
+            activity: 'petManager_activityRecords'
+        };
+
+        // 类型名称映射
+        const TYPE_NAMES = {
+            health: { vaccine: '疫苗注射', checkup: '体检', medical: '医疗历史' },
+            feeding: { plan: '喂食计划', record: '营养摄入记录' },
+            activity: { walk: '遛狗散步', play: '玩耍', training: '训练', swimming: '游泳', other: '其他' },
+            supply: { food: '食品', daily: '日用品', toy: '玩具', medicine: '药品', other: '其他' }
+        };
+
+        // 切换标签页
+        function switchTab(tabId) {
+            // 更新按钮状态
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 切换内容
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // 从localStorage加载数据
+        function loadFromStorage(key) {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
+        }
+
+        // 保存数据到localStorage
+        function saveToStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
+        }
+
+        // 生成唯一ID
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        // ==================== 健康档案模块 ====================
+        document.getElementById('healthForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const record = {
+                id: generateId(),
+                type: document.getElementById('healthType').value,
+                date: document.getElementById('healthDate').value,
+                title: document.getElementById('healthTitle').value,
+                clinic: document.getElementById('healthClinic').value,
+                description: document.getElementById('healthDescription').value
+            };
+            const records = loadFromStorage(STORAGE_KEYS.health);
+            records.unshift(record);
+            saveToStorage(STORAGE_KEYS.health, records);
+            renderHealthRecords();
+            this.reset();
+        });
+
+        function renderHealthRecords() {
+            const records = loadFromStorage(STORAGE_KEYS.health);
+            const container = document.getElementById('healthRecords');
+
+            if (records.length === 0) {
+                container.innerHTML = '<p class="empty-message">暂无健康记录</p>';
+                return;
+            }
+
+            container.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <div class="record-info">
+                        <p><strong>类型：</strong>${TYPE_NAMES.health[record.type]}</p>
+                        <p><strong>日期：</strong>${record.date}</p>
+                        <p><strong>标题：</strong>${record.title}</p>
+                        ${record.clinic ? `<p><strong>医院：</strong>${record.clinic}</p>` : ''}
+                        ${record.description ? `<p><strong>描述：</strong>${record.description}</p>` : ''}
+                    </div>
+                    <button class="delete-btn" onclick="deleteHealthRecord('${record.id}')">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteHealthRecord(id) {
+            const records = loadFromStorage(STORAGE_KEYS.health).filter(r => r.id !== id);
+            saveToStorage(STORAGE_KEYS.health, records);
+            renderHealthRecords();
+        }
+
+        // ==================== 喂养管理模块 ====================
+        document.getElementById('feedingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const record = {
+                id: generateId(),
+                type: document.getElementById('feedingType').value,
+                date: document.getElementById('feedingDate').value,
+                time: document.getElementById('feedingTime').value,
+                foodName: document.getElementById('foodName').value,
+                amount: document.getElementById('foodAmount').value,
+                calories: document.getElementById('foodCalories').value,
+                notes: document.getElementById('feedingNotes').value
+            };
+            const records = loadFromStorage(STORAGE_KEYS.feeding);
+            records.unshift(record);
+            saveToStorage(STORAGE_KEYS.feeding, records);
+            renderFeedingRecords();
+            this.reset();
+        });
+
+        function renderFeedingRecords() {
+            const records = loadFromStorage(STORAGE_KEYS.feeding);
+            const container = document.getElementById('feedingRecords');
+
+            if (records.length === 0) {
+                container.innerHTML = '<p class="empty-message">暂无喂养记录</p>';
+                return;
+            }
+
+            container.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <div class="record-info">
+                        <p><strong>类型：</strong>${TYPE_NAMES.feeding[record.type]}</p>
+                        <p><strong>日期时间：</strong>${record.date} ${record.time}</p>
+                        <p><strong>食物：</strong>${record.foodName}</p>
+                        <p><strong>份量：</strong>${record.amount} g</p>
+                        ${record.calories ? `<p><strong>热量：</strong>${record.calories} kcal</p>` : ''}
+                        ${record.notes ? `<p><strong>备注：</strong>${record.notes}</p>` : ''}
+                    </div>
+                    <button class="delete-btn" onclick="deleteFeedingRecord('${record.id}')">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteFeedingRecord(id) {
+            const records = loadFromStorage(STORAGE_KEYS.feeding).filter(r => r.id !== id);
+            saveToStorage(STORAGE_KEYS.feeding, records);
+            renderFeedingRecords();
+        }
+
+        // ==================== 成长记录模块 ====================
+        document.getElementById('growthForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const record = {
+                id: generateId(),
+                date: document.getElementById('growthDate').value,
+                weight: document.getElementById('weight').value,
+                height: document.getElementById('height').value,
+                notes: document.getElementById('growthNotes').value
+            };
+            const records = loadFromStorage(STORAGE_KEYS.growth);
+            records.unshift(record);
+            saveToStorage(STORAGE_KEYS.growth, records);
+            renderGrowthRecords();
+            this.reset();
+        });
+
+        function renderGrowthRecords() {
+            const records = loadFromStorage(STORAGE_KEYS.growth);
+            const container = document.getElementById('growthRecords');
+
+            if (records.length === 0) {
+                container.innerHTML = '<p class="empty-message">暂无成长记录</p>';
+                return;
+            }
+
+            container.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <div class="record-info">
+                        <p><strong>日期：</strong>${record.date}</p>
+                        <p><strong>体重：</strong>${record.weight} kg</p>
+                        <p><strong>身高：</strong>${record.height} cm</p>
+                        ${record.notes ? `<p><strong>备注：</strong>${record.notes}</p>` : ''}
+                    </div>
+                    <button class="delete-btn" onclick="deleteGrowthRecord('${record.id}')">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteGrowthRecord(id) {
+            const records = loadFromStorage(STORAGE_KEYS.growth).filter(r => r.id !== id);
+            saveToStorage(STORAGE_KEYS.growth, records);
+            renderGrowthRecords();
+        }
+
+        // ==================== 用品管理模块 ====================
+        document.getElementById('suppliesForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const record = {
+                id: generateId(),
+                name: document.getElementById('supplyName').value,
+                category: document.getElementById('supplyCategory').value,
+                quantity: document.getElementById('supplyQuantity').value,
+                unit: document.getElementById('supplyUnit').value,
+                minStock: document.getElementById('supplyMinStock').value,
+                notes: document.getElementById('supplyNotes').value
+            };
+            const records = loadFromStorage(STORAGE_KEYS.supplies);
+            records.unshift(record);
+            saveToStorage(STORAGE_KEYS.supplies, records);
+            renderSuppliesRecords();
+            this.reset();
+        });
+
+        function renderSuppliesRecords() {
+            const records = loadFromStorage(STORAGE_KEYS.supplies);
+            const container = document.getElementById('suppliesRecords');
+
+            if (records.length === 0) {
+                container.innerHTML = '<p class="empty-message">暂无用品记录</p>';
+                return;
+            }
+
+            container.innerHTML = records.map(record => {
+                const isLowStock = record.minStock && parseInt(record.quantity) <= parseInt(record.minStock);
+                const stockColor = isLowStock ? 'color: #ff6b6b;' : '';
+                return `
+                    <div class="record-item" style="${isLowStock ? 'border-left-color: #ff6b6b;' : ''}">
+                        <div class="record-info">
+                            <p><strong>用品名称：</strong>${record.name}</p>
+                            <p><strong>类别：</strong>${TYPE_NAMES.supply[record.category]}</p>
+                            <p style="${stockColor}"><strong>库存：</strong>${record.quantity} ${record.unit} ${isLowStock ? '⚠️ 库存不足' : ''}</p>
+                            <div class="quantity-control">
+                                <button class="qty-btn" onclick="decreaseQuantity('${record.id}')" ${parseInt(record.quantity) <= 0 ? 'disabled' : ''}>-</button>
+                                <span class="qty-display">${record.quantity}</span>
+                                <button class="qty-btn" onclick="increaseQuantity('${record.id}')">+</button>
+                            </div>
+                            ${record.minStock ? `<p><strong>最低库存：</strong>${record.minStock}</p>` : ''}
+                            ${record.notes ? `<p><strong>备注：</strong>${record.notes}</p>` : ''}
+                        </div>
+                        <div class="action-buttons">
+                            <button class="delete-btn" onclick="deleteSuppliesRecord('${record.id}')">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteSuppliesRecord(id) {
+            const records = loadFromStorage(STORAGE_KEYS.supplies).filter(r => r.id !== id);
+            saveToStorage(STORAGE_KEYS.supplies, records);
+            renderSuppliesRecords();
+        }
+
+        function increaseQuantity(id) {
+            const records = loadFromStorage(STORAGE_KEYS.supplies);
+            const record = records.find(r => r.id === id);
+            if (record) {
+                record.quantity = parseInt(record.quantity) + 1;
+                saveToStorage(STORAGE_KEYS.supplies, records);
+                renderSuppliesRecords();
+            }
+        }
+
+        function decreaseQuantity(id) {
+            const records = loadFromStorage(STORAGE_KEYS.supplies);
+            const record = records.find(r => r.id === id);
+            if (record && parseInt(record.quantity) > 0) {
+                record.quantity = parseInt(record.quantity) - 1;
+                saveToStorage(STORAGE_KEYS.supplies, records);
+                renderSuppliesRecords();
+            }
+        }
+
+        // ==================== 活动日志模块 ====================
+        document.getElementById('activityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const record = {
+                id: generateId(),
+                type: document.getElementById('activityType').value,
+                date: document.getElementById('activityDate').value,
+                time: document.getElementById('activityTime').value,
+                duration: document.getElementById('activityDuration').value,
+                location: document.getElementById('activityLocation').value,
+                description: document.getElementById('activityDescription').value
+            };
+            const records = loadFromStorage(STORAGE_KEYS.activity);
+            records.unshift(record);
+            saveToStorage(STORAGE_KEYS.activity, records);
+            renderActivityRecords();
+            this.reset();
+        });
+
+        function renderActivityRecords() {
+            const records = loadFromStorage(STORAGE_KEYS.activity);
+            const container = document.getElementById('activityRecords');
+
+            if (records.length === 0) {
+                container.innerHTML = '<p class="empty-message">暂无活动记录</p>';
+                return;
+            }
+
+            container.innerHTML = records.map(record => `
+                <div class="record-item">
+                    <div class="record-info">
+                        <p><strong>活动类型：</strong>${TYPE_NAMES.activity[record.type]}</p>
+                        <p><strong>日期时间：</strong>${record.date} ${record.time}</p>
+                        <p><strong>时长：</strong>${record.duration} 分钟</p>
+                        ${record.location ? `<p><strong>地点：</strong>${record.location}</p>` : ''}
+                        ${record.description ? `<p><strong>描述：</strong>${record.description}</p>` : ''}
+                    </div>
+                    <button class="delete-btn" onclick="deleteActivityRecord('${record.id}')">删除</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteActivityRecord(id) {
+            const records = loadFromStorage(STORAGE_KEYS.activity).filter(r => r.id !== id);
+            saveToStorage(STORAGE_KEYS.activity, records);
+            renderActivityRecords();
+        }
+
+        // ==================== 初始化 ====================
+        // 设置默认日期为今天
+        function setTodayDate() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('healthDate').value = today;
+            document.getElementById('feedingDate').value = today;
+            document.getElementById('growthDate').value = today;
+            document.getElementById('activityDate').value = today;
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            setTodayDate();
+            renderHealthRecords();
+            renderFeedingRecords();
+            renderGrowthRecords();
+            renderSuppliesRecords();
+            renderActivityRecords();
+        };
+    </script>
+</body>
+</html>
