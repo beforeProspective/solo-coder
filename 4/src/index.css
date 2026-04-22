@@ -1,0 +1,23 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Courier New', monospace;
+  background-color: #1a1a2e;
+  color: #eeeeee;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+button {
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
