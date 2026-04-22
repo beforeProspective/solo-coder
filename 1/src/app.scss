@@ -1,0 +1,61 @@
+:root {
+  --page-bg-light: #e5e5ea;
+  --page-bg-dark: #1c1c1e;
+  --calculator-bg-light: #f2f2f7;
+  --calculator-bg-dark: #000000;
+  --display-text-light: #000000;
+  --display-text-dark: #ffffff;
+  --number-btn-light: #e3e3e8;
+  --number-btn-dark: #333333;
+  --number-btn-active-light: #d1d1d6;
+  --number-btn-active-dark: #5a5a5a;
+  --operator-btn-light: #ff9f0a;
+  --operator-btn-dark: #ff9f0a;
+  --operator-btn-active-light: #ffcc80;
+  --operator-btn-active-dark: #ffcc80;
+  --function-btn-light: #d1d1d6;
+  --function-btn-dark: #a5a5a5;
+  --function-btn-active-light: #e3e3e8;
+  --function-btn-active-dark: #d4d4d4;
+  --border-light: rgba(0, 0, 0, 0.1);
+  --border-dark: rgba(255, 255, 255, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-weight: 300;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--page-bg-dark);
+  transition: background 0.3s ease;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    background: var(--page-bg-light);
+  }
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
