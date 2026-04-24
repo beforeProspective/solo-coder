@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页性能瀑布图工具</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>网页性能瀑布图工具</h1>
+            <div class="header-actions">
+                <button id="captureBtn" class="btn btn-primary">抓取当前页面性能</button>
+                <button id="saveSnapshotBtn" class="btn btn-secondary">保存快照</button>
+                <button id="loadSnapshotBtn" class="btn btn-secondary">加载快照</button>
+                <button id="compareBtn" class="btn btn-info">对比快照</button>
+                <button id="diagnoseBtn" class="btn btn-warning">生成诊断建议</button>
+            </div>
+        </header>
+        
+        <section class="metrics-section">
+            <h2>核心性能指标</h2>
+            <div class="metrics-grid" id="metricsGrid">
+                <!-- 性能指标将在这里动态显示 -->
+            </div>
+        </section>
+        
+        <section class="waterfall-section">
+            <h2>资源加载瀑布图</h2>
+            <div class="waterfall-controls">
+                <div class="filter-group">
+                    <label>过滤资源类型：</label>
+                    <select id="resourceTypeFilter">
+                        <option value="all">全部</option>
+                        <option value="script">脚本</option>
+                        <option value="style">样式表</option>
+                        <option value="image">图片</option>
+                        <option value="font">字体</option>
+                        <option value="fetch">XHR/Fetch</option>
+                        <option value="document">文档</option>
+                    </select>
+                </div>
+                <div class="sort-group">
+                    <label>排序方式：</label>
+                    <select id="sortType">
+                        <option value="startTime">开始时间</option>
+                        <option value="duration">耗时</option>
+                        <option value="name">名称</option>
+                    </select>
+                </div>
+            </div>
+            <div class="canvas-container">
+                <canvas id="waterfallCanvas"></canvas>
+                <div id="tooltip" class="tooltip"></div>
+            </div>
+        </section>
+        
+        <section class="timeline-section">
+            <h2>页面生命周期时间线</h2>
+            <div class="canvas-container">
+                <canvas id="timelineCanvas"></canvas>
+            </div>
+        </section>
+        
+        <section class="snapshots-section" id="snapshotsSection" style="display: none;">
+            <h2>快照对比</h2>
+            <div class="snapshots-container">
+                <div class="snapshot-selector">
+                    <label>快照1：</label>
+                    <select id="snapshot1Select"></select>
+                </div>
+                <div class="snapshot-selector">
+                    <label>快照2：</label>
+                    <select id="snapshot2Select"></select>
+                </div>
+                <button id="doCompareBtn" class="btn btn-primary">执行对比</button>
+            </div>
+            <div class="comparison-results" id="comparisonResults">
+                <!-- 对比结果将在这里显示 -->
+            </div>
+        </section>
+        
+        <section class="diagnostics-section" id="diagnosticsSection" style="display: none;">
+            <h2>性能诊断建议</h2>
+            <div class="diagnostics-list" id="diagnosticsList">
+                <!-- 诊断建议将在这里显示 -->
+            </div>
+        </section>
+    </div>
+    
+    <script src="performance-collector.js"></script>
+    <script src="waterfall-chart.js"></script>
+    <script src="timeline-chart.js"></script>
+    <script src="snapshot-manager.js"></script>
+    <script src="diagnostics.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
